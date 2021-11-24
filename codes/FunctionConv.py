@@ -119,7 +119,7 @@ class FunctionConv(nn.Module):
                     the message reduction. It must be a User-defined Functions.
             """
             # we used mean as the reduce function , and a self-defined function as the apply function
-            print(feat_src.shape)
+            #print(feat_src.shape)
             graph.update_all(fn.copy_src('h', 'm'), fn.mean('m', 'neigh'),self.apply_nodes_func)
             rst = graph.dstdata['rst']
             if act_flag and self.activation is not None:
