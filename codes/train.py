@@ -5,7 +5,6 @@ this script is used to train/fine-tune and validate/test the models
 from dataset import *
 from options import get_options
 from model import *
-from unity import CV_plot
 import dgl
 import pickle
 import numpy as np
