@@ -341,7 +341,6 @@ def train(options):
     th.multiprocessing.set_sharing_strategy('file_system')
     device = th.device("cuda:"+str(options.gpu) if th.cuda.is_available() else "cpu")
 
-    freeze = options.freeze
     data_path = options.datapath
     print(data_path)
     train_data_file = os.path.join(data_path,'boom2.pkl')
