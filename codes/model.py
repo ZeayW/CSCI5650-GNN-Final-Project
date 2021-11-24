@@ -137,6 +137,7 @@ class FuncGNN(nn.Module):
         super(FuncGNN, self).__init__()
         self.activation = activation
         self.ntypes = ntypes
+        self.hidden_dim = hidden_dim
         self.out_dim = out_dim
         self.dropout = nn.Dropout(p=dropout)
         self.fc_out = nn.Linear(hidden_dim,out_dim)
