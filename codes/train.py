@@ -374,7 +374,7 @@ def train(options):
     in_nlayers = options.in_nlayers if isinstance(options.in_nlayers,int) else options.in_nlayers[0]
     out_nlayers = options.out_nlayers if isinstance(options.out_nlayers,int) else options.out_nlayers[0]
 
-
+    label_name = 'label_o'
     print("Loading data...")
     with open(train_data_file,'rb') as f:
         train_g = pickle.load(f)
@@ -382,78 +382,7 @@ def train(options):
     with open(val_data_file,'rb') as f:
         val_g = pickle.load(f)
 
-    if options.muldiv:
-        label_name = 'mul_o'
-    elif options.sub:
-        label_name = 'sub_o'
-    else:
-        label_name = 'adder_o'
 
-    print(train_g.ndata)
-    if options.add != -1:
-        train_g.ndata['label_o'] = train_g.ndata[label_name]
-        val_g.ndata['label_o'] = val_g.ndata[label_name]
-        mask_sub_train = train_g.ndata['sub_o']>0
-        mask_sub_val = val_g.ndata['sub_o'] > 0
-        mask_mul_train = train_g.ndata['mul_o'] > 0
-        mask_mul_val = val_g.ndata['mul_o'] > 0
-        if options.add ==1:
-            train_g.ndata['label_o'][mask_mul_train] = 1
-            val_g.ndata['label_o'][mask_mul_val] = 1
-        elif options.add == 2:
-            train_g.ndata['label_o'][mask_sub_train] = 1
-            val_g.ndata['label_o'][mask_sub_val] = 1
-        elif options.add == 3:
-            train_g.ndata['label_o'][mask_mul_train] = 1
-            val_g.ndata['label_o'][mask_mul_val] = 1
-            train_g.ndata['label_o'][mask_sub_train] = 1
-            val_g.ndata['label_o'][mask_sub_val] = 1
-    print('val sub output:',len(val_g.ndata['label_o'][val_g.ndata['label_o']==1]))
-
-    print(val_g.ndata['ntype'].shape)
-    print("num pos1", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
-
-
-    if not options.muldiv and not options.sub:
-        train_g.ndata['position'][train_g.ndata['label_o'].squeeze(-1) == -1] = 100
-        val_g.ndata['position'][val_g.ndata['label_o'].squeeze(-1) == -1] = 100
-
-    unlabel_low(train_g, options.unlabel)
-    unlabel_low(val_g, options.unlabel)
-    if options.add==-1:
-        label_name = 'label_o'
-        train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(-1) == 2] = 1
-        val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(-1) == 2] = 1
-
-
-    train_g.edata['a'] = th.ones(size=(len(train_g.edata['r']),1))
-
-    train_g.ndata['f_input'] = th.ones(size=(train_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
-
-    train_g.ndata['temp'] = th.ones(size=(train_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
-    train_g.ndata['ntype2'] = th.argmax(train_g.ndata['ntype'], dim=1).squeeze(-1)
-    val_g.ndata['f_input'] = th.ones(size=(val_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
-    val_g.ndata['temp'] = th.ones(size=(val_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
-    val_g.ndata['ntype2'] = th.argmax(val_g.ndata['ntype'], dim=1).squeeze(-1)
-
-    train_graphs = dgl.unbatch(train_g)
-    temp = train_graphs[1]
-    train_graphs[1] = train_graphs[2]
-    train_graphs[2] = temp
-
-    temp = train_graphs[0]
-    train_graphs[0] = train_graphs[3]
-    train_graphs[3] = temp
-
-    # train_graphs = train_graphs[:options.train_percent]
-
-    train_g = dgl.batch(train_graphs)
-
-    with open(train_data_file,'wb') as f:
-        pickle.dump(train_g,f)
-
-    with open(val_data_file,'wb') as f:
-        pickle.dump(val_g,f)
 
     print("num train pos", len(train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(1) >0]))
     print("num val pos", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
