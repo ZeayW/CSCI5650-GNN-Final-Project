@@ -42,6 +42,21 @@ def DAG2UDG(g):
 
     return udg
 
+def type_count(ntypes,count):
+    for tp in ntypes:
+        tp = tp.item()
+        count[tp] +=1
+
+def cal_ratios(count1,count2):
+    ratios = []
+    for i in range(len(count1)):
+        if count2[i] == 0:
+            ratios.append(-1)
+        else:
+            ratio = count1[i] / count2[i]
+            ratios.append(round(ratio,4))
+    return ratios
+
 def oversample(g,options,in_dim):
     r"""
 
