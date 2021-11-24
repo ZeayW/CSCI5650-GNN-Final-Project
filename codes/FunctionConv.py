@@ -70,6 +70,8 @@ class FunctionConv(nn.Module):
         for i in range(self.ntypes):
             mask = gate_types==i    # nodes of type i
             #print(gate_types.shape)
+            if len(gate_inputs[mask])==0:
+                continue
             print(self.gate_functions[i].weight.shape, gate_inputs[mask].shape)
             res[mask] = self.gate_functions[i](gate_inputs[mask])
 
