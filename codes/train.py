@@ -183,12 +183,22 @@ def preprocess(data_path,device,options):
         with open(os.path.join(data_path,'label2id.pkl'),'wb') as f:
             pickle.dump(label2id,f)
 
-    # load a pretrained model (if any)
-    with open(os.path.join(options.pre_model_dir,'model.pkl'),'rb') as f:
-        if 'proj' in options.pre_model_dir or 'shuffle' in options.pre_model_dir or 'abgnn' in options.pre_model_dir:
-            _, model,_ = pickle.load(f)
-        else:
-            _,model = pickle.load(f)
+    # initialize the  model
+    if options.gat:
+        network = GAT
+    elif options.gin:
+        network = GIN
+    elif options.function:
+        network = FuncGNN
+    else:
+        exit()
+
+    model = network(
+        ntypes = options.in_dim,
+        hidden_dim=options.hidden_dim,
+        out_dim=options.out_dim,
+        dropout=options.gcn_dropout,
+    )
 
     # initialize a multlayer perceptron
     mlp = MLP(

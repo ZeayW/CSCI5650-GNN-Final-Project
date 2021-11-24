@@ -124,18 +124,17 @@ class GIN(nn.Module):
         return h.squeeze(1)
 
 
-class FuncGCN(nn.Module):
+class FuncGNN(nn.Module):
     def __init__(
         self,
         ntypes,         #
-        in_dim,
         hidden_dim,
         out_dim,
         dropout,
         activation=th.relu,
 
     ):
-        super(FuncGCN, self).__init__()
+        super(FuncGNN, self).__init__()
         self.activation = activation
         self.ntypes = ntypes
         self.out_dim = out_dim
@@ -144,7 +143,7 @@ class FuncGCN(nn.Module):
 
         self.conv = FunctionConv(
                     ntypes,
-                    in_dim,
+                    hidden_dim,
                     hidden_dim,
                     activation=activation,
                 )

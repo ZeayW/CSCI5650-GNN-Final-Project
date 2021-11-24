@@ -66,7 +66,7 @@ def get_options(args=None):
     parser.add_argument('--muldiv',action='store_true')
     parser.add_argument('--add', type=int,default=-1)
     parser.add_argument('--num_input', type=int, default=2)
-
+    parser.add_argument('--ntypes',type=int,default=16)
     parser.add_argument('--train_percent',type=float,default=6)
 
     #parser.add_argument('--in')
