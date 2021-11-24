@@ -386,7 +386,7 @@ def train(options):
 
     print("num train pos", len(train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(1) >0]))
     print("num val pos", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
-    exit()
+
     train_nodes, pos_count, neg_count = oversample(train_g, options, options.in_dim)
 
 
