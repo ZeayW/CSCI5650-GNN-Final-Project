@@ -156,8 +156,8 @@ def preprocess(data_path,device,options):
     label2id = {}
     if os.path.exists(data_path) is False:
         os.makedirs(data_path)
-    train_data_file = os.path.join(data_path, 'boom2.pkl')
-    val_data_file = os.path.join(data_path, 'rocket2.pkl')
+    train_data_file = os.path.join(data_path, 'boom.pkl')
+    val_data_file = os.path.join(data_path, 'rocket.pkl')
 
     # generate and save the test dataset if missing
     if os.path.exists(val_data_file) is False:
@@ -343,8 +343,8 @@ def train(options):
 
     data_path = options.datapath
     print(data_path)
-    train_data_file = os.path.join(data_path,'boom2.pkl')
-    val_data_file = os.path.join(data_path,'rocket2.pkl')
+    train_data_file = os.path.join(data_path,'boom.pkl')
+    val_data_file = os.path.join(data_path,'rocket.pkl')
 
     # preprocess: generate dataset / initialize the model
     if options.preprocess :
