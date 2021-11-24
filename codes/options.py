@@ -8,7 +8,7 @@ def get_options(args=None):
     parser.add_argument("--num_epoch", type=float, default=1500)
     parser.add_argument("--in_dim", type=int, default=16)
     parser.add_argument("--out_dim", type=int, default=256)
-    parser.add_argument("--hidden_dim", type=int, default=512)
+    parser.add_argument("--hidden_dim", type=int, default=256)
     parser.add_argument("--out_nlayers", type=int, nargs='+',default=2)
     parser.add_argument("--in_nlayers", type=int, nargs='+',default=2)
     parser.add_argument("--gcn_dropout", type=float, default=0)
