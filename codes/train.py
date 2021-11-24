@@ -397,8 +397,14 @@ def train(options):
     with open(val_data_file,'rb') as f:
         val_g = pickle.load(f)
 
+    val_g.ndata['f_input'] = th.ones(size=(val_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
+    train_g.ndata['f_input'] = th.ones(size=(train_g.number_of_nodes(), options.hidden_dim), dtype=th.float)
+    with open(train_data_file,'wb') as f:
+        pickle.dump(train_g,f)
 
-
+    with open(val_data_file,'wb') as f:
+        pickle.dump(val_g,f)
+    exit()
     print("num train pos", len(train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(1) >0]))
     print("num val pos", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
 
