@@ -483,7 +483,6 @@ def train(options):
                 input_features = blocks[0].srcdata["ntype"]
             else:
                 input_features = blocks[0].srcdata["f_input"]
-            print(input_features.shape)
             # the central nodes are the output of the final block
             output_labels = blocks[-1].dstdata[label_name].squeeze(1)
             total_num += len(output_labels)
