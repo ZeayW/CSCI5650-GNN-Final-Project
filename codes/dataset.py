@@ -1,19 +1,16 @@
 import sys
 
 sys.path.append("..")
-import util.structural as structural
-import util.verilog as verilog
 
 import dgl
 from dgl.data import DGLDataset
 import networkx as nx
 import torch as th
-import numpy as np
+
 import os
 import random
-from util.new_verilog_parser import DcParser
+from verilog_parser import DcParser
 from options import get_options
-from torch.nn.parameter import Parameter
 
 
 def parse_single_file(parser,vfile_pair,hier_report,label2id):
