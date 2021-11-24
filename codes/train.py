@@ -191,6 +191,7 @@ def preprocess(data_path,device,options):
     elif options.function:
         network = FuncGNN
     else:
+        print('please choose a valid model type!')
         exit()
 
     model = network(
