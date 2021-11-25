@@ -450,7 +450,7 @@ def train(options):
     print(len(val_nids))
     for ni, (central_nodes, input_nodes, blocks) in enumerate(valdataloader):
         print(blocks)
-    exit()
+    #exit()
     loaders = [valdataloader]
 
     beta = options.beta
