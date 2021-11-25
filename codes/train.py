@@ -301,7 +301,7 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
             for ni, (central_nodes, input_nodes, blocks) in enumerate(loader):
                 start = time()
                 blocks = [b.to(device) for b in blocks]
-                print(blocks)
+                #print(blocks)
                 # get the input features
                 if options.gnn:
                     input_features = blocks[0].srcdata["ntype"]
