@@ -65,11 +65,13 @@ class FunctionConv(nn.Module):
         gate_inputs = nodes.data['neigh']   # the messages to aggregate
         gate_types = nodes.data['ntype2']   # the node-type of the target nodes
         res = nodes.data['temp']            # a tensor used to save the result messages
-
+        print(gate_inputs.shape)
+        print(gate_types.shapes)
         # for each gate type, use an independent aggregator (function) to aggregate the messages
         for i in range(self.ntypes):
             mask = gate_types==i    # nodes of type i
             #print(gate_types.shape)
+            #print()
             if len(gate_inputs[mask])==0:
                 continue
             #print(self.gate_functions[i].weight.shape, gate_inputs[mask].shape,self.gate_functions[i](gate_inputs[mask]))
