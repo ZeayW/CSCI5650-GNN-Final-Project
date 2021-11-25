@@ -36,7 +36,7 @@ class Sampler(BlockSampler):
         return frontier
 
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
-        print(len(seed_nodes))
+        #print(len(seed_nodes))
         # neighbours = g.ndata['neigh'][seed_nodes]
 
         blocks = []
@@ -46,7 +46,7 @@ class Sampler(BlockSampler):
         for block_id in reversed(range(self.num_layers)):
             # print(len(seed_nodes))
             frontier = self.sample_frontier(block_id, g, seed_nodes)
-
+            print(frontier)
             # Removing edges from the frontier for link prediction training falls
             # into the category of frontier postprocessing
             if exclude_eids is not None:
