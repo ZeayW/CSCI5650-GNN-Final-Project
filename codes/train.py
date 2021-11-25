@@ -418,9 +418,9 @@ def train(options):
     nids = nids.numpy().tolist()
     shuffle(nids)
     val_nids = nids[:int(len(nids)/10)]
-    print(len(val_nids),val_nids)
+    #print(len(val_nids),val_nids)
     test_nids = nids[int(len(nids)/10):]
-    print(len(test_nids), test_nids)
+    #print(len(test_nids), test_nids)
     if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
         with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
             pickle.dump(val_nids,f)
@@ -442,9 +442,18 @@ def train(options):
     valdataloader = MyNodeDataLoader(
         True,
         val_g,
-        nids,
+        val_nids,
         sampler,
-        batch_size=len(nids),
+        batch_size=len(val_nids),
+        shuffle=True,
+        drop_last=False,
+    )
+    testdataloader = MyNodeDataLoader(
+        True,
+        val_g,
+        test_nids,
+        sampler,
+        batch_size=len(test_nids),
         shuffle=True,
         drop_last=False,
     )
@@ -563,7 +572,8 @@ def train(options):
         # validate
         val_loss, val_acc, val_recall, val_precision, val_F1_score = validate(loaders,label_name, device, model,
                                                                               mlp, Loss, beta,options)
-
+        validate([testdataloader], label_name, device, model,
+                 mlp, Loss, beta, options)
         # save the result of current epoch
         with open(os.path.join(options.model_saving_dir, 'res.txt'), 'a') as f:
             f.write(str(round(Train_loss, 8)) + " " + str(round(Train_acc, 3)) + " " + str(
