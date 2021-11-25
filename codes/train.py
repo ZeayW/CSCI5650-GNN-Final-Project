@@ -419,6 +419,7 @@ def train(options):
     val_nids = nids[:int(len(nids)/10)]
     print(len(val_nids),val_nids)
     test_nids = nids[int(len(nids)/10):]
+    print(len(test_nids), test_nids)
     if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
         with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
             pickle.dump(val_nids,f)
