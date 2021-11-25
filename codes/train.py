@@ -443,7 +443,7 @@ def train(options):
         val_g,
         val_nids,
         sampler,
-        batch_size=val_g.num_nodes(),
+        batch_size=len(val_nids),
         shuffle=True,
         drop_last=False,
     )
