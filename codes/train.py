@@ -447,6 +447,9 @@ def train(options):
         shuffle=True,
         drop_last=False,
     )
+    for ni, (central_nodes, input_nodes, blocks) in enumerate(valdataloader):
+        print(blocks)
+    exit()
     loaders = [valdataloader]
 
     beta = options.beta
