@@ -27,7 +27,7 @@ class Sampler(BlockSampler):
         self.add_self_loop = add_self_loop
     def sample_frontier(self, block_id, g, seed_nodes):
         fanout = self.fanouts[block_id]
-
+        print(fanout)
         if fanout is None:
             frontier = subgraph.in_subgraph(g, seed_nodes)
         else:
@@ -46,7 +46,7 @@ class Sampler(BlockSampler):
         for block_id in reversed(range(self.num_layers)):
             # print(len(seed_nodes))
             frontier = self.sample_frontier(block_id, g, seed_nodes)
-            print(frontier)
+            #print(frontier)
             # Removing edges from the frontier for link prediction training falls
             # into the category of frontier postprocessing
             if exclude_eids is not None:
