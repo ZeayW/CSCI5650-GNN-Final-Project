@@ -417,6 +417,7 @@ def train(options):
     nids = nids[val_g.ndata['label_o'].squeeze(-1)!=-1]
     shuffle(nids)
     val_nids = nids[:int(len(nids)/10)]
+    print(len(val_nids),val_nids)
     test_nids = nids[int(len(nids)/10):]
     if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
         with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
