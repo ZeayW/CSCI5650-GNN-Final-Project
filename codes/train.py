@@ -441,9 +441,9 @@ def train(options):
     valdataloader = MyNodeDataLoader(
         True,
         val_g,
-        val_nids,
+        nids,
         sampler,
-        batch_size=len(val_nids),
+        batch_size=len(nids),
         shuffle=True,
         drop_last=False,
     )
