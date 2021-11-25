@@ -476,16 +476,24 @@ def train(options):
     temp = train_graphs[1]
     train_graphs[1] = train_graphs[2]
     train_graphs[2] = temp
-
-    if options.train_percent == 1:
-        train_graphs = [train_graphs[3]]
-    else:
-        train_graphs = train_graphs[:int(options.train_percent)]
+    temp = train_graphs[0]
+    train_graphs[0] = train_graphs[2]
+    train_graphs[3] = temp
+    # if options.train_percent == 1:
+    #     train_graphs = [train_graphs[3]]
+    # else:
+    #     train_graphs = train_graphs[:int(options.train_percent)]
     # temp = []
     # train_graphs.pop(1)
     train_g = dgl.batch(train_graphs)
+    with open(os.path.join(options.datapath,'boom.pkl'),'wb') as f:
+        pickle.dump(train_g,f)
+    with open(os.path.join(options.datapath,'rocket.pkl'),'wb') as f:
+        pickle.dump(val_g,f)
+    exit()
     print("num train pos", len(train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(1) >0]))
     print("num val pos", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
+
 
     train_nodes, pos_count, neg_count = oversample(train_g, options, options.in_dim)
 
