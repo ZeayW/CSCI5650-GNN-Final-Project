@@ -36,7 +36,7 @@ class Sampler(BlockSampler):
         return frontier
 
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
-
+        print(len(seed_nodes))
         # neighbours = g.ndata['neigh'][seed_nodes]
 
         blocks = []
