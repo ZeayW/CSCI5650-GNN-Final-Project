@@ -421,7 +421,7 @@ def train(options):
     if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
         with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
             pickle.dump(val_nids,f)
-        with open(os.path.join(options.datapath, 'val_nids.pkl'), 'wb') as f:
+        with open(os.path.join(options.datapath, 'test_nids.pkl'), 'wb') as f:
             pickle.dump(test_nids, f)
     #print(len(val_nids))
 
