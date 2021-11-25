@@ -29,7 +29,7 @@ class Sampler(BlockSampler):
         fanout = self.fanouts[block_id]
         if fanout is None:
             frontier = subgraph.in_subgraph(g, seed_nodes)
-            print(len(seed_nodes),seed_nodes)
+            #print(len(seed_nodes),seed_nodes)
         else:
             frontier = sampling.sample_neighbors(g, seed_nodes, fanout, replace=self.replace)
 
