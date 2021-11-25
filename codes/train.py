@@ -397,6 +397,7 @@ def train(options):
     with open(val_data_file,'rb') as f:
         val_g = pickle.load(f)
 
+    #val_g = val_g[:int(len())]
     print("num train pos", len(train_g.ndata['label_o'][train_g.ndata['label_o'].squeeze(1) >0]))
     print("num val pos", len(val_g.ndata['label_o'][val_g.ndata['label_o'].squeeze(1) >0]))
 
@@ -414,7 +415,15 @@ def train(options):
     val_nids = th.tensor(range(val_g.number_of_nodes()))
     print(len(val_nids))
     val_nids = val_nids[val_g.ndata['label_o'].squeeze(-1)!=-1]
-    print(len(val_nids))
+    nids = shuffle(val_nids)
+    val_nids = nids[:int(len(nids)/10)]
+    test_nids = nids[int(len(nids)/10):]
+    if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
+        with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
+            pickle.dump(val_nids,f)
+        with open(os.path.join(options.datapath, 'val_nids.pkl'), 'wb') as f:
+            pickle.dump(test_nids, f)
+    #print(len(val_nids))
 
     # create dataloader for training/validate dataset
     traindataloader = MyNodeDataLoader(
