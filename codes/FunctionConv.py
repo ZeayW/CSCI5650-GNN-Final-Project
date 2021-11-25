@@ -72,7 +72,7 @@ class FunctionConv(nn.Module):
             #print(gate_types.shape)
             if len(gate_inputs[mask])==0:
                 continue
-            print(self.gate_functions[i].weight.shape, gate_inputs[mask].shape,self.gate_functions[i](gate_inputs[mask]))
+            #print(self.gate_functions[i].weight.shape, gate_inputs[mask].shape,self.gate_functions[i](gate_inputs[mask]))
             res[mask] = self.gate_functions[i](gate_inputs[mask])
 
         return {'rst':res}
