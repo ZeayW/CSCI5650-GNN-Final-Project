@@ -415,7 +415,8 @@ def train(options):
     nids = th.tensor(range(val_g.number_of_nodes()))
     print(len(nids))
     nids = nids[val_g.ndata['label_o'].squeeze(-1)!=-1]
-    #shuffle(nids)
+    nids = nids.numpy().tolist()
+    shuffle(nids)
     val_nids = nids[:int(len(nids)/10)]
     print(len(val_nids),val_nids)
     test_nids = nids[int(len(nids)/10):]
