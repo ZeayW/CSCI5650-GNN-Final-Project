@@ -447,6 +447,7 @@ def train(options):
         shuffle=True,
         drop_last=False,
     )
+    print(len(val_nids))
     for ni, (central_nodes, input_nodes, blocks) in enumerate(valdataloader):
         print(blocks)
     exit()
