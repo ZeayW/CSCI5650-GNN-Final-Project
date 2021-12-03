@@ -410,7 +410,6 @@ def train(options):
         in_nlayers = 0
     if out_nlayers == -1:
         out_nlayers = 0
-    print(options.degree)
     sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
 
     nids = th.tensor(range(val_g.number_of_nodes()))

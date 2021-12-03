@@ -55,6 +55,32 @@ class GAT(nn.Module):
         self.layers.append(GATConv(hidden_dim,out_dim,num_heads=num_heads[1],combine_type='mean',allow_zero_in_degree=True))
 
     def forward(self, blocks, features):
+        r"""
+
+                Description
+                -----------
+                forward computation of FGNN
+
+                Parameters
+                ----------
+                blocks : [dgl_block]
+                    blocks gives the sampled neighborhood for a batch of target nodes.
+                    Given a target node n, its sampled neighborhood is organized in layers
+                    depending on the distance to n.
+                    A block is a graph that describes the part between two succesive layers,
+                    consisting of two sets of nodes: the *input* nodes and *output* nodes.
+                    The output nodes of the last block are the target nodes (POs), and
+                    the input nodes of the first block are the PIs.
+                feature : torch.Tensor
+                    It represents the input (PI) feature of shape :math:`(N, D_{in})`
+                    where :math:`D_{in}` is size of input feature, :math:`N` is the number of target nodes (POs).
+
+                Returns
+                -------
+                torch.Tensor
+                    The output feature of shape :math:`(N, D_{out})` where :math:`D_{out}`
+                    is size of output (PO) feature.
+                """
         h = features
 
         for i, layer in enumerate(self.layers):
@@ -112,8 +138,32 @@ class GIN(nn.Module):
         self.layers.append(GINConv(in_dim, out_dim,include=include,aggregator_type=aggregation_type))
 
     def forward(self, blocks, features):
-        #print("h:",features.shape)
-        #h = features
+        r"""
+
+                Description
+                -----------
+                forward computation of FGNN
+
+                Parameters
+                ----------
+                blocks : [dgl_block]
+                    blocks gives the sampled neighborhood for a batch of target nodes.
+                    Given a target node n, its sampled neighborhood is organized in layers
+                    depending on the distance to n.
+                    A block is a graph that describes the part between two succesive layers,
+                    consisting of two sets of nodes: the *input* nodes and *output* nodes.
+                    The output nodes of the last block are the target nodes (POs), and
+                    the input nodes of the first block are the PIs.
+                feature : torch.Tensor
+                    It represents the input (PI) feature of shape :math:`(N, D_{in})`
+                    where :math:`D_{in}` is size of input feature, :math:`N` is the number of target nodes (POs).
+
+                Returns
+                -------
+                torch.Tensor
+                    The output feature of shape :math:`(N, D_{out})` where :math:`D_{out}`
+                    is size of output (PO) feature.
+                """
         h = self.activation(self.fc_init(features))
 
         for i in range(self.n_layers + 1):
@@ -247,6 +297,32 @@ class GCN(nn.Module):
         self.layers.append(SAGEConv(in_dim, out_dim,include=include,label = label,combine_type='sum', aggregator_type=aggregation_type))
 
     def forward(self, blocks, features):
+        r"""
+
+                Description
+                -----------
+                forward computation of FGNN
+
+                Parameters
+                ----------
+                blocks : [dgl_block]
+                    blocks gives the sampled neighborhood for a batch of target nodes.
+                    Given a target node n, its sampled neighborhood is organized in layers
+                    depending on the distance to n.
+                    A block is a graph that describes the part between two succesive layers,
+                    consisting of two sets of nodes: the *input* nodes and *output* nodes.
+                    The output nodes of the last block are the target nodes (POs), and
+                    the input nodes of the first block are the PIs.
+                feature : torch.Tensor
+                    It represents the input (PI) feature of shape :math:`(N, D_{in})`
+                    where :math:`D_{in}` is size of input feature, :math:`N` is the number of target nodes (POs).
+
+                Returns
+                -------
+                torch.Tensor
+                    The output feature of shape :math:`(N, D_{out})` where :math:`D_{out}`
+                    is size of output (PO) feature.
+                """
         #print("h:",features.shape)
         h = features
         #print(blocks)
