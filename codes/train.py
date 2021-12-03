@@ -42,6 +42,19 @@ def DAG2UDG(g):
 
     return udg
 
+def get_reverse_graph(g):
+    edges = g.edges()
+    reverse_edges = (edges[1], edges[0])
+
+    rg = dgl.graph(reverse_edges, num_nodes=g.num_nodes())
+    for key, value in g.ndata.items():
+        # print(key,value)
+        rg.ndata[key] = value
+    for key, value in g.edata.items():
+        # print(key,value)
+        rg.edata[key] = value
+    return rg
+
 def type_count(ntypes,count):
     for tp in ntypes:
         tp = tp.item()
@@ -208,29 +221,50 @@ def preprocess(data_path,device,options):
         print('please choose a valid model type!')
         exit()
 
-    model = network(
-        ntypes = options.in_dim,
-        hidden_dim=options.hidden_dim,
-        out_dim=options.out_dim,
-        dropout=options.gcn_dropout,
-    )
-
+    if options.in_nlayers!=-1:
+        model1 = network(
+            ntypes = options.in_dim,
+            hidden_dim=options.hidden_dim,
+            out_dim=options.out_dim,
+            n_layers = options.in_nlayers,
+            in_dim = options.in_dim,
+            dropout=options.gcn_dropout,
+        )
+        out_dim1 = model1.out_dim
+    else:
+        model1 = None
+        out_dim1 = 0
+    if options.out_nlayers!=-1:
+        model2 = network(
+            ntypes=options.in_dim,
+            hidden_dim=options.hidden_dim,
+            out_dim=options.out_dim,
+            n_layers=options.out_nlayers,
+            in_dim=options.in_dim,
+            dropout=options.gcn_dropout,
+        )
+        out_dim2 = model2.out_dim
+    else:
+        model2 = None
+        out_dim2 =0
     # initialize a multlayer perceptron
+
     mlp = MLP(
-        in_dim = model.out_dim,
+        in_dim = out_dim1+out_dim2,
         out_dim = options.nlabels,
         nlayers = options.n_fcn,
         dropout = options.mlp_dropout
     ).to(device)
-    print(model)
-    print(mlp)
+
+    classifier = BiClassifier(model1,model2,mlp)
+    print(classifier)
     print("creating model in:",options.model_saving_dir)
     # save the model and create a file a save the results
     if os.path.exists(options.model_saving_dir) is False:
         os.makedirs(options.model_saving_dir)
         with open(os.path.join(options.model_saving_dir, 'model.pkl'), 'wb') as f:
             parameters = options
-            pickle.dump((parameters, model,mlp), f)
+            pickle.dump((parameters, classifier), f)
         with open(os.path.join(options.model_saving_dir, 'res.txt'), 'w') as f:
             pass
 
@@ -254,16 +288,16 @@ def load_model(device,options):
 
 
     with open(os.path.join(model_dir,'model.pkl'), 'rb') as f:
-        param, model,mlp = pickle.load(f)
+        param, classifier,mlp = pickle.load(f)
         param.model_saving_dir = options.model_saving_dir
-        model = model.to(device)
+        classifier = classifier.to(device)
 
         # make some changes to the options
         if options.change_lr:
             param.learning_rate = options.learning_rate
         if options.change_alpha:
             param.alpha = options.alpha
-    return param,model,mlp
+    return param,classifier
 
 
 
@@ -297,24 +331,22 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
 
     with th.no_grad():
         for i,loader in enumerate(loaders):
-            for ni, (central_nodes, input_nodes, blocks) in enumerate(loader):
+            for ni, (in_blocks,out_blocks) in enumerate(loader):
                 start = time()
-                blocks = [b.to(device) for b in blocks]
-
-                # get the input features
+                in_blocks = [b.to(device) for b in in_blocks]
+                out_blocks = [b.to(device) for b in out_blocks]
+                # get in input features
                 if options.gnn:
-                    input_features = blocks[0].srcdata["ntype"]
+                    in_input_features = in_blocks[0].srcdata["ntype"]
+                    out_input_features = in_blocks[0].srcdata["ntype"]
                 else:
-                    input_features = blocks[0].srcdata["f_input"]
-
+                    in_input_features = in_blocks[0].srcdata["f_input"]
+                    out_input_features = in_blocks[0].srcdata["ntype"]
                 # the central nodes are the output of the final block
-                output_labels = blocks[-1].dstdata[label_name].squeeze(1)
+                output_labels = in_blocks[-1].dstdata[label_name].squeeze(1)
                 total_num += len(output_labels)
-                # get the embeddings of central nodes
-                embedding = model(blocks, input_features)
-
-                # feed the embeddings into the mlp to predict the labels
-                label_hat = mlp(embedding)
+                # predict the labels of central nodes
+                label_hat = model(in_blocks, in_input_features, out_blocks, out_input_features)
                 pos_prob = nn.functional.softmax(label_hat, 1)[:, 1]
                 # adjust the predicted labels based on a given thredshold beta
                 pos_prob[pos_prob >= beta] = 1
@@ -350,15 +382,12 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
     F1_score = 0
     if precision != 0 or recall != 0:
         F1_score = 2 * recall * precision / (recall + precision)
-    print("  validate:")
+
     print("\ttp:", tp, " fp:", fp, " fn:", fn, " tn:", tn, " precision:", round(precision, 3))
     print("\tloss:{:.3f}, acc:{:.3f}, recall:{:.3f}, F1 score:{:.3f}".format(loss, acc,recall, F1_score))
 
     return [loss, acc,recall,precision,F1_score]
 
-def unlabel_low(g,unlabel_threshold):
-    mask_low = g.ndata['position'] <= unlabel_threshold
-    g.ndata['label_o'][mask_low] = 0
 
 def train(options):
 
@@ -376,13 +405,11 @@ def train(options):
         return
     print(options)
     # load the model
-    options, model,mlp = load_model(device, options)
+    options, model = load_model(device, options)
     if model is None:
         print("No model, please prepocess first , or choose a pretrain model")
         return
     print(model)
-    mlp = mlp.to(device)
-    print(mlp)
 
     in_nlayers = options.in_nlayers if isinstance(options.in_nlayers,int) else options.in_nlayers[0]
     out_nlayers = options.out_nlayers if isinstance(options.out_nlayers,int) else options.out_nlayers[0]
@@ -409,8 +436,8 @@ def train(options):
         in_nlayers = 0
     if out_nlayers == -1:
         out_nlayers = 0
-    sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
-
+    in_sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
+    out_sampler = Sampler([None] * (out_nlayers + 1), include_dst_in_src=options.include)
     val_nids = th.tensor(range(val_g.number_of_nodes()))
     print(len(val_nids))
     val_nids = val_nids[val_g.ndata['label_o'].squeeze(-1) != -1]
@@ -431,21 +458,29 @@ def train(options):
     with open(os.path.join('../models/tp6_new1/ln4_bs1024_7/', 'test_nids.pkl'), 'rb') as f:
         test_nids = pickle.load(f)
     # create dataloader for training/validate dataset
+    if options.sage:
+        graph_function = DAG2UDG
+        out_sampler.include_dst_in_src = True
+    else:
+        graph_function = get_reverse_graph
     traindataloader = MyNodeDataLoader(
         False,
         train_g,
+        graph_function(train_g),
         train_nodes,
-        sampler,
+        in_sampler,
+        out_sampler,
         batch_size=options.batch_size,
         shuffle=True,
         drop_last=False,
     )
-
     valdataloader = MyNodeDataLoader(
         True,
         val_g,
+        graph_function(val_g),
         val_nids,
-        sampler,
+        in_sampler,
+        out_sampler,
         batch_size=val_g.num_nodes(),
         shuffle=True,
         drop_last=False,
@@ -453,8 +488,10 @@ def train(options):
     testdataloader = MyNodeDataLoader(
         True,
         val_g,
+        graph_function(val_g),
         test_nids,
-        sampler,
+        in_sampler,
+        out_sampler,
         batch_size=val_g.num_nodes(),
         shuffle=True,
         drop_last=False,
@@ -469,13 +506,11 @@ def train(options):
     Loss = nn.CrossEntropyLoss()
     # set the optimizer
     optim = th.optim.Adam(
-        itertools.chain(mlp.parameters(), model.parameters()),
-
-        options.learning_rate, weight_decay=options.weight_decay
+        model.parameters(), options.learning_rate, weight_decay=options.weight_decay
     )
-
     model.train()
-    mlp.train()
+    if model.GCN1 is not None: model.GCN1.train()
+    if model.GCN2 is not None: model.GCN2.train()
 
 
     print("Start training")
@@ -490,26 +525,26 @@ def train(options):
         total_num,total_loss,correct,fn,fp,tn,tp = 0,0.0,0,0,0,0,0
         pos_count , neg_count =0, 0
         pos_embeddings= th.tensor([]).to(device)
-        for ni, (central_nodes,input_nodes,blocks) in enumerate(traindataloader):
+        for ni, (in_blocks,out_blocks) in enumerate(traindataloader):
             if ni == len(traindataloader)-1:
                 continue
             start_time = time()
             # put the block to device
-            blocks = [b.to(device) for b in blocks]
-
+            in_blocks = [b.to(device) for b in in_blocks]
+            out_blocks = [b.to(device) for b in out_blocks]
             # get in input features
             if options.gnn:
-                input_features = blocks[0].srcdata["ntype"]
+                in_input_features = in_blocks[0].srcdata["ntype"]
+                out_input_features = in_blocks[0].srcdata["ntype"]
             else:
-                input_features = blocks[0].srcdata["f_input"]
+                in_input_features = in_blocks[0].srcdata["f_input"]
+                out_input_features = in_blocks[0].srcdata["ntype"]
             # the central nodes are the output of the final block
-            output_labels = blocks[-1].dstdata[label_name].squeeze(1)
+            output_labels = in_blocks[-1].dstdata[label_name].squeeze(1)
             total_num += len(output_labels)
-            # get the embeddings of central nodes
-            embedding = model(blocks,input_features)
+            # predict the labels of central nodes
+            label_hat = model(in_blocks,in_input_features,out_blocks,out_input_features)
 
-            # feed the embeddings into the mlp to predict the labels
-            label_hat = mlp(embedding)
             if get_options().nlabels != 1:
                 pos_prob = nn.functional.softmax(label_hat, 1)[:, 1]
             else:
@@ -571,8 +606,10 @@ def train(options):
         print("\tloss:{:.8f}, acc:{:.3f}, recall:{:.3f}, F1 score:{:.3f}".format(Train_loss,Train_acc,Train_recall,Train_F1_score))
 
         # validate
+        print("  validate:")
         val_loss, val_acc, val_recall, val_precision, val_F1_score = validate(loaders,label_name, device, model,
                                                                               mlp, Loss, beta,options)
+        print("  test:")
         validate([testdataloader], label_name, device, model,
                  mlp, Loss, beta, options)
         # save the result of current epoch
