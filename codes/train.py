@@ -9,7 +9,7 @@ import dgl
 import pickle
 import numpy as np
 import os
-from MyDataLoader import *
+from MyDataLoader2 import *
 from time import time
 from random import shuffle
 import itertools
@@ -288,7 +288,7 @@ def load_model(device,options):
 
 
     with open(os.path.join(model_dir,'model.pkl'), 'rb') as f:
-        param, classifier,mlp = pickle.load(f)
+        param, classifier = pickle.load(f)
         param.model_saving_dir = options.model_saving_dir
         classifier = classifier.to(device)
 
