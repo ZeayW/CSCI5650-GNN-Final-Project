@@ -28,6 +28,7 @@ def get_options(args=None):
     parser.add_argument('--label',type=str,default='in')
     parser.add_argument('--gin',action='store_true')
     parser.add_argument('--gnn',action='store_true')
+    parser.add_argument('--sage', action='store_true')
     parser.add_argument('--include',action='store_true')
     parser.add_argument('--nlabels',type=int,default=2)
     parser.add_argument('--os_rate',type=int,default=20)
