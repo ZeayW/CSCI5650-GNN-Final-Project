@@ -301,7 +301,7 @@ def load_model(device,options):
 
 
 
-def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
+def validate(loaders,label_name,device,model,Loss,beta,options):
     r"""
 
     validate the model
@@ -608,10 +608,10 @@ def train(options):
         # validate
         print("  validate:")
         val_loss, val_acc, val_recall, val_precision, val_F1_score = validate(loaders,label_name, device, model,
-                                                                              mlp, Loss, beta,options)
+                                                                              Loss, beta,options)
         print("  test:")
         validate([testdataloader], label_name, device, model,
-                 mlp, Loss, beta, options)
+                 Loss, beta, options)
         # save the result of current epoch
         with open(os.path.join(options.model_saving_dir, 'res.txt'), 'a') as f:
             f.write(str(round(Train_loss, 8)) + " " + str(round(Train_acc, 3)) + " " + str(
@@ -628,7 +628,7 @@ def train(options):
               os.makedirs(options.model_saving_dir)
            with open(os.path.join(options.model_saving_dir, 'model.pkl'), 'wb') as f:
               parameters = options
-              pickle.dump((parameters, model,mlp), f)
+              pickle.dump((parameters, model), f)
            print("Model successfully saved")
 
 
