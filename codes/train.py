@@ -75,9 +75,8 @@ def oversample(g,options,in_dim):
     print("total number of nodes: ", g.num_nodes())
 
 
-    if options.region:
-        labels = g.ndata['label_ad']
-    elif options.label == 'in':
+
+    if options.label == 'in':
         labels = g.ndata['label_i']
     elif options.label == 'out':
         labels = g.ndata['label_o']
