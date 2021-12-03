@@ -411,21 +411,25 @@ def train(options):
         out_nlayers = 0
     sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
 
-    nids = th.tensor(range(val_g.number_of_nodes()))
-    print(len(nids))
-    nids = nids[val_g.ndata['label_o'].squeeze(-1)!=-1]
-    nids = nids.numpy().tolist()
-    shuffle(nids)
-    val_nids = nids[:int(len(nids)/10)]
-    #print(len(val_nids),val_nids)
-    test_nids = nids[int(len(nids)/10):]
-    #print(len(test_nids), test_nids)
+    val_nids = th.tensor(range(val_g.number_of_nodes()))
+    print(len(val_nids))
+    val_nids = val_nids[val_g.ndata['label_o'].squeeze(-1) != -1]
+    print(len(val_nids))
+    val_nids1 = val_nids.numpy().tolist()
+    shuffle(val_nids1)
+    val_nids = val_nids1[:int(len(val_nids1) / 10)]
+    test_nids = val_nids1[int(len(val_nids1) / 10):]
+
     if not os.path.exists(os.path.join(options.model_saving_dir,'val_nids.pkl')):
         with open(os.path.join(options.model_saving_dir,'val_nids.pkl'),'wb') as f:
             pickle.dump(val_nids,f)
         with open(os.path.join(options.model_saving_dir, 'test_nids.pkl'), 'wb') as f:
             pickle.dump(test_nids, f)
 
+    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7', 'val_nids.pkl'), 'wb') as f:
+        val_nids = pickle.load(f)
+    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7', 'test_nids.pkl'), 'wb') as f:
+        test_nids = pickle.load(f)
     # create dataloader for training/validate dataset
     traindataloader = MyNodeDataLoader(
         False,
@@ -442,7 +446,7 @@ def train(options):
         val_g,
         val_nids,
         sampler,
-        batch_size=len(val_nids),
+        batch_size=val_g.num_nodes(),
         shuffle=True,
         drop_last=False,
     )
@@ -451,13 +455,12 @@ def train(options):
         val_g,
         test_nids,
         sampler,
-        batch_size=len(test_nids),
+        batch_size=val_g.num_nodes(),
         shuffle=True,
         drop_last=False,
     )
     print(len(val_nids))
-    for ni, (central_nodes, input_nodes, blocks) in enumerate(valdataloader):
-        print(blocks)
+
     #exit()
     loaders = [valdataloader]
 
