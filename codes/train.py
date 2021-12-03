@@ -301,7 +301,7 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
             for ni, (central_nodes, input_nodes, blocks) in enumerate(loader):
                 start = time()
                 blocks = [b.to(device) for b in blocks]
-                #print(blocks)
+
                 # get the input features
                 if options.gnn:
                     input_features = blocks[0].srcdata["ntype"]
@@ -354,7 +354,6 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
     print("  validate:")
     print("\ttp:", tp, " fp:", fp, " fn:", fn, " tn:", tn, " precision:", round(precision, 3))
     print("\tloss:{:.3f}, acc:{:.3f}, recall:{:.3f}, F1 score:{:.3f}".format(loss, acc,recall, F1_score))
-    #print('\tavg pos sim :{:.4f}, avg cross sim:{:.4f}, avg neg sim:{:.4f}'.format(pos_sim,cross_sim,neg_sim))
 
     return [loss, acc,recall,precision,F1_score]
 
@@ -421,12 +420,11 @@ def train(options):
     #print(len(val_nids),val_nids)
     test_nids = nids[int(len(nids)/10):]
     #print(len(test_nids), test_nids)
-    if not os.path.exists(os.path.join(options.datapath,'val_nids.pkl')):
-        with open(os.path.join(options.datapath,'val_nids.pkl'),'wb') as f:
+    if not os.path.exists(os.path.join(options.model_saving_dir,'val_nids.pkl')):
+        with open(os.path.join(options.model_saving_dir,'val_nids.pkl'),'wb') as f:
             pickle.dump(val_nids,f)
-        with open(os.path.join(options.datapath, 'test_nids.pkl'), 'wb') as f:
+        with open(os.path.join(options.model_saving_dir, 'test_nids.pkl'), 'wb') as f:
             pickle.dump(test_nids, f)
-    #print(len(val_nids))
 
     # create dataloader for training/validate dataset
     traindataloader = MyNodeDataLoader(
