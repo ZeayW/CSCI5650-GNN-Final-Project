@@ -533,12 +533,12 @@ def train(options):
             in_blocks = [b.to(device) for b in in_blocks]
             out_blocks = [b.to(device) for b in out_blocks]
             # get in input features
-            if options.gnn:
+            if not options.function:
                 in_input_features = in_blocks[0].srcdata["ntype"]
-                out_input_features = in_blocks[0].srcdata["ntype"]
+                out_input_features = out_blocks[0].srcdata["ntype"]
             else:
                 in_input_features = in_blocks[0].srcdata["f_input"]
-                out_input_features = in_blocks[0].srcdata["ntype"]
+                out_input_features = out_blocks[0].srcdata["f_input"]
             # the central nodes are the output of the final block
             output_labels = in_blocks[-1].dstdata[label_name].squeeze(1)
             total_num += len(output_labels)
