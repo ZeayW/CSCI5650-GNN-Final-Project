@@ -70,10 +70,6 @@ class FunctionConv(nn.Module):
         # for each gate type, use an independent aggregator (function) to aggregate the messages
         for i in range(self.ntypes):
             mask = gate_types==i    # nodes of type i
-            #print(gate_types.shape)
-            #print()
-            if len(gate_inputs[mask])==0:
-                continue
             #print(self.gate_functions[i].weight.shape, gate_inputs[mask].shape,self.gate_functions[i](gate_inputs[mask]))
             res[mask] = self.gate_functions[i](gate_inputs[mask])
 

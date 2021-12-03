@@ -36,8 +36,6 @@ class Sampler(BlockSampler):
         return frontier
 
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
-        #print(len(seed_nodes))
-        # neighbours = g.ndata['neigh'][seed_nodes]
 
         blocks = []
         exclude_eids = (
@@ -70,28 +68,11 @@ class Sampler(BlockSampler):
             if self.add_self_loop:
                 frontier.add_edges(seed_nodes, seed_nodes)
             block = transform.to_block(frontier, seed_nodes, include_dst_in_src=self.include_dst_in_src)
-            # print(block)
-            # print(block)
-            # print(block.etypes)
-            # g = dgl.graph((frontier.edges()[0],frontier.edges()[1]),num_nodes=frontier.num_nodes())
-            # for key, value in frontier.ndata.items():
-            #     # print(key,value)
-            #     g.ndata[key] = value
-            # for key, value in frontier.edata.items():
-            #     # print(key,value)
-            #     g.edata[key] = value
 
-            # frontier.add_edges(seed_nodes, seed_nodes)
-            # block = transform.to_block(frontier, seed_nodes, include_dst_in_src=True)
-            # print(block)
-            # if block_id == self.num_layers-1:
-
-            # print(block)
 
             if self.return_eids:
                 assign_block_eids(block, frontier)
 
-            #seed_nodes = {ntype: block.srcnodes[ntype].data[NID] for ntype in block.srctypes}
             seed_nodes = block.srcdata[NID]
             if block.number_of_edges() == 0:
                 break
@@ -133,25 +114,9 @@ class MyNodeCollator(NodeCollator):
                     items.add(nid)
                     # print(nid)
                 items = torch.tensor(list(items))
-        #print('hh')
-        #print(items)
+
         blocks = self.block_sampler.sample_blocks(self.g, items)
 
-        #print(blocks[-1].dstnodes())
-        i = 0
-        #while blocks[-1].number_of_dst_nodes() !=512:
-           #i = i+1
-           #items = list(items)
-           #shuffle(items)
-           #items.pop()
-           #items.append(randint(0,self.g.num_nodes()))
-           #items = torch.tensor(items)
-           #blocks = self.block_sampler.sample_blocks(self.g, items)
-           #reverse_blocks =self.reverse_block_sampler.sample_blocks(self.g, items)
-           #print(i)
-           #print(blocks[-1].dstdata['label'] == reverse_blocks[-1].dstdata['label'])
-           #print(blocks[-1].number_of_dst_nodes()," ",reverse_blocks[-1].number_of_dst_nodes())
-        #print(blocks[-1],reverse_blocks[-1])
 
         central_nodes = blocks[-1].dstdata[NID]
         input_nodes = blocks[0].srcdata[NID]
