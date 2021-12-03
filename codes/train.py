@@ -215,7 +215,7 @@ def preprocess(data_path,device,options):
         network = GraphSage
     elif options.abgnn:
         network = ABGNN
-    elif options.func:
+    elif options.function:
         network = FuncGNN
     else:
         print('please choose a valid model type!')
