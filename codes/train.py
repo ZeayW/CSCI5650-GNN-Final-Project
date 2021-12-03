@@ -211,11 +211,11 @@ def preprocess(data_path,device,options):
             pickle.dump(label2id,f)
 
     # initialize the  model
-    if options.gat:
-        network = GAT
-    elif options.gin:
-        network = GIN
-    elif options.function:
+    if options.sage:
+        network = GraphSage
+    elif options.abgnn:
+        network = ABGNN
+    elif options.func:
         network = FuncGNN
     else:
         print('please choose a valid model type!')
@@ -336,12 +336,12 @@ def validate(loaders,label_name,device,model,mlp,Loss,beta,options):
                 in_blocks = [b.to(device) for b in in_blocks]
                 out_blocks = [b.to(device) for b in out_blocks]
                 # get in input features
-                if options.gnn:
+                if not options.function:
                     in_input_features = in_blocks[0].srcdata["ntype"]
                     out_input_features = in_blocks[0].srcdata["ntype"]
                 else:
                     in_input_features = in_blocks[0].srcdata["f_input"]
-                    out_input_features = in_blocks[0].srcdata["ntype"]
+                    out_input_features = in_blocks[0].srcdata["f_input"]
                 # the central nodes are the output of the final block
                 output_labels = in_blocks[-1].dstdata[label_name].squeeze(1)
                 total_num += len(output_labels)

@@ -27,7 +27,7 @@ def get_options(args=None):
     parser.add_argument('--gat',action='store_true',help = 'choose a GAT-based model')
     parser.add_argument('--label',type=str,default='in')
     parser.add_argument('--gin',action='store_true')
-    parser.add_argument('--gnn',action='store_true')
+    parser.add_argument('--abgnn',action='store_true')
     parser.add_argument('--sage', action='store_true')
     parser.add_argument('--include',action='store_true')
     parser.add_argument('--nlabels',type=int,default=2)
