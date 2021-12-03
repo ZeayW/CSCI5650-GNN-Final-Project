@@ -426,9 +426,9 @@ def train(options):
         with open(os.path.join(options.model_saving_dir, 'test_nids.pkl'), 'wb') as f:
             pickle.dump(test_nids, f)
 
-    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7', 'val_nids.pkl'), 'wb') as f:
+    with open(os.path.join('../models/tp6_new/ln4_bs1024_4', 'val_nids.pkl'), 'wb') as f:
         val_nids = pickle.load(f)
-    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7', 'test_nids.pkl'), 'wb') as f:
+    with open(os.path.join('../models/tp6_new/ln4_bs1024_4', 'test_nids.pkl'), 'wb') as f:
         test_nids = pickle.load(f)
     # create dataloader for training/validate dataset
     traindataloader = MyNodeDataLoader(
