@@ -254,8 +254,6 @@ def test(options):
     )
     print(len(test_nids))
 
-    #exit()
-
     beta = options.beta
     # set loss function
     Loss = nn.CrossEntropyLoss()

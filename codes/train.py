@@ -442,25 +442,25 @@ def train(options):
         out_nlayers = 0
     in_sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
     out_sampler = Sampler([None] * (out_nlayers + 1), include_dst_in_src=options.include)
-    val_nids = th.tensor(range(val_g.number_of_nodes()))
-    print(len(val_nids))
-    val_nids = val_nids[val_g.ndata['label_o'].squeeze(-1) != -1]
-    print(len(val_nids))
-    val_nids1 = val_nids.numpy().tolist()
-    shuffle(val_nids1)
-    val_nids = val_nids1[:int(len(val_nids1) / 10)]
-    test_nids = val_nids1[int(len(val_nids1) / 10):]
 
-    if not os.path.exists(os.path.join(options.model_saving_dir,'val_nids.pkl')):
-        with open(os.path.join(options.model_saving_dir,'val_nids.pkl'),'wb') as f:
-            pickle.dump(val_nids,f)
-        with open(os.path.join(options.model_saving_dir, 'test_nids.pkl'), 'wb') as f:
+    if os.path.exists(os.path.join(options.datapath, 'val_nids.pkl')):
+        with open(os.path.join(options.datapath, 'val_nids.pkl'), 'rb') as f:
+            val_nids = pickle.load(f)
+        with open(os.path.join(options.datapath, 'test_nids.pkl'), 'rb') as f:
+            test_nids = pickle.load(f)
+    else:
+        val_nids = th.tensor(range(val_g.number_of_nodes()))
+        val_nids = val_nids[val_g.ndata['label_o'].squeeze(-1) != -1]
+        val_nids1 = val_nids.numpy().tolist()
+        shuffle(val_nids1)
+        val_nids = val_nids1[:int(len(val_nids1) / 10)]
+        test_nids = val_nids1[int(len(val_nids1) / 10):]
+
+        with open(os.path.join(options.datapath, 'val_nids.pkl'), 'wb') as f:
+            pickle.dump(val_nids, f)
+        with open(os.path.join(options.datapath, 'test_nids.pkl'), 'wb') as f:
             pickle.dump(test_nids, f)
 
-    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7/', 'val_nids.pkl'), 'rb') as f:
-        val_nids = pickle.load(f)
-    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7/', 'test_nids.pkl'), 'rb') as f:
-        test_nids = pickle.load(f)
     # create dataloader for training/validate dataset
     if options.sage:
         graph_function = DAG2UDG
