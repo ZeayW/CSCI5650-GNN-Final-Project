@@ -192,7 +192,7 @@ class GraphSage(nn.Module):
             in_dim = hidden_dim
         # output layer
 
-        self.layers.append(SAGEConv(in_dim, out_dim,include=True,label = label,combine_type='sum', aggregator_type='mean'))
+        self.layers.append(SAGEConv(in_dim, out_dim,include=True,combine_type='sum', aggregator_type='mean'))
 
     def forward(self, blocks, features):
         r"""
