@@ -420,7 +420,10 @@ def train(options):
     with open(train_data_file,'rb') as f:
         train_g = pickle.load(f)
         train_graphs = dgl.unbatch(train_g)
-        train_graphs = train_graphs[:int(options.train_percent)]
+        if options.train_percent == 1:
+            train_graphs = [train_graphs[3]]
+        else:
+            train_graphs = train_graphs[:int(options.train_percent)]
         train_g = dgl.batch(train_graphs)
     with open(val_data_file,'rb') as f:
         val_g = pickle.load(f)

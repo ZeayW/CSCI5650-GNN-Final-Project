@@ -41,12 +41,9 @@ class Sampler(BlockSampler):
 
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
 
-        # neighbours = g.ndata['neigh'][seed_nodes]
-
         blocks = []
         exclude_eids = (
             _tensor_or_dict_to_numpy(exclude_eids) if exclude_eids is not None else None)
-        # print(exclude_eids)
         for block_id in reversed(range(self.num_layers)):
             frontier = self.sample_frontier(block_id, g, seed_nodes)
 
@@ -72,10 +69,6 @@ class Sampler(BlockSampler):
 
             block = transform.to_block(frontier, seed_nodes, include_dst_in_src=self.include_dst_in_src)
 
-            # if block_id == self.num_layers-1:
-
-            # print(block)
-
             if self.return_eids:
                 assign_block_eids(block, frontier)
 
@@ -99,27 +92,19 @@ class ReverseSampler(BlockSampler):
 
         if fanout is None:
             frontier = subgraph.out_subgraph(g, seed_nodes)
-            # r_frontier.ndata["feat"] = frontier.ndata["feat"]
-            # r_frontier.ndata["label"] = frontier.ndata["label"]
-            # r_frontier.edata['r'] = frontier.edata['r']
         else:
             frontier = sampling.sample_neighbors(g, seed_nodes, fanout, replace=self.replace)
         r_frontier = dgl.graph((frontier.edges()[-1], frontier.edges()[0]), num_nodes=frontier.num_nodes())
         print(frontier.num_nodes())
         print(r_frontier.num_nodes())
         for key, value in frontier.ndata.items():
-            # print(key,value)
             r_frontier.ndata[key] = value
         for key, value in frontier.edata.items():
-            # print(key,value)
             r_frontier.edata[key] = value
-        #block = transform.to_block(r_frontier, seed_nodes, include_dst_in_src=self.include_dst_in_src)
 
         return r_frontier
 
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
-
-        #neighbours = g.ndata['neigh'][seed_nodes]
 
         blocks = []
         exclude_eids = (
@@ -149,9 +134,6 @@ class ReverseSampler(BlockSampler):
                     frontier.edata[EID] = new_eids
 
             block = transform.to_block(frontier, seed_nodes,include_dst_in_src=self.include_dst_in_src)
-            #if block_id == self.num_layers-1:
-            
-               #print(block)
 
             if self.return_eids:
                 assign_block_eids(block, frontier)
@@ -179,16 +161,11 @@ class MyNodeCollator(NodeCollator):
             # returns a list of pairs: group them by node types into a dict
             items = utils.group_as_dict(items)
 
-        # TODO(BarclayII) Because DistGraph doesn't have idtype and device implemented,
-        # this function does not work.  I'm again skipping this step as a workaround.
-        # We need to fix this.
-
         if isinstance(items, dict):
             items = utils.prepare_tensor_dict(self.g, items, 'items')
         else:
             items = utils.prepare_tensor(self.g, items, 'items')
-        #print('a')
-        #print(len(set(items.numpy().tolist())))
+
         if self.predict is False:
             if len(set(items.numpy().tolist())) != get_options().batch_size:
                #print('add...')
@@ -200,34 +177,15 @@ class MyNodeCollator(NodeCollator):
                   items.add(nid)
                   #print(nid)
                items = torch.tensor(list(items))
-        #print(len(set(items.numpy().tolist())))
-        #print('b')
+
         blocks = self.block_sampler.sample_blocks(self.g, items)
-        #print('block')
         reverse_blocks =self.reverse_block_sampler.sample_blocks(self.rg, items)
-        #print('reverse')
-        #print(blocks[-1].dstnodes())
-        i = 0
-        #while blocks[-1].number_of_dst_nodes() !=512:
-           #i = i+1
-           #items = list(items)
-           #shuffle(items)
-           #items.pop()
-           #items.append(randint(0,self.g.num_nodes()))
-           #items = torch.tensor(items)
-           #blocks = self.block_sampler.sample_blocks(self.g, items)
-           #reverse_blocks =self.reverse_block_sampler.sample_blocks(self.g, items)
-           #print(i)
-           #print(blocks[-1].dstdata['label'] == reverse_blocks[-1].dstdata['label'])
-           #print(blocks[-1].number_of_dst_nodes()," ",reverse_blocks[-1].number_of_dst_nodes())
-        #print(blocks[-1],reverse_blocks[-1])
 
         central_nodes = blocks[-1].dstdata[NID]
         input_nodes = blocks[0].srcdata[NID]
         reverse_input_nodes = reverse_blocks[0].srcdata[NID]
         _pop_blocks_storage(blocks, self.g)
         _pop_blocks_storage(reverse_blocks, self.rg)
-        #print(central_nodes, input_nodes,blocks, reverse_input_nodes,reverse_blocks)
         return central_nodes, input_nodes,blocks, reverse_input_nodes,reverse_blocks
 
 class MyNodeDataLoaderIter:
@@ -237,15 +195,9 @@ class MyNodeDataLoaderIter:
 
     def __next__(self):
         central_nodes, input_nodes,blocks, reverse_input_nodes,reverse_blocks = next(self.iter_)
-        #print(central_nodes, input_nodes,blocks, reverse_input_nodes,reverse_blocks)
-        #print('get')
+
         _restore_blocks_storage(blocks, self.node_dataloader.collator.g)
         _restore_blocks_storage(reverse_blocks, self.node_dataloader.collator.rg)
-        #print('return')
-        # for block in blocks:
-        #     print(block.device)
-        # for block in reverse_blocks:
-        #     print(block.device)
         return blocks,reverse_blocks
 
 

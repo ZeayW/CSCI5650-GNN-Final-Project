@@ -9,7 +9,7 @@ import dgl
 import pickle
 import numpy as np
 import os
-from MyDataLoader import *
+from MyDataLoader2 import *
 from time import time
 from random import shuffle
 import itertools
@@ -41,6 +41,19 @@ def DAG2UDG(g):
     udg.edata['direction'] = th.cat((th.zeros(size=(1,g.number_of_edges())).squeeze(0),th.ones(size=(1,g.number_of_edges())).squeeze(0)))
 
     return udg
+
+def get_reverse_graph(g):
+    edges = g.edges()
+    reverse_edges = (edges[1], edges[0])
+
+    rg = dgl.graph(reverse_edges, num_nodes=g.num_nodes())
+    for key, value in g.ndata.items():
+        # print(key,value)
+        rg.ndata[key] = value
+    for key, value in g.edata.items():
+        # print(key,value)
+        rg.edata[key] = value
+    return rg
 
 def type_count(ntypes,count):
     for tp in ntypes:
@@ -75,9 +88,8 @@ def oversample(g,options,in_dim):
     print("total number of nodes: ", g.num_nodes())
 
 
-    if options.region:
-        labels = g.ndata['label_ad']
-    elif options.label == 'in':
+
+    if options.label == 'in':
         labels = g.ndata['label_i']
     elif options.label == 'out':
         labels = g.ndata['label_o']
@@ -153,87 +165,6 @@ def oversample(g,options,in_dim):
     return train_nodes,pos_count, neg_count
 
 
-def preprocess(data_path,device,options):
-    r"""
-
-    do some preprocessing work: generate dataset / initialize the model
-
-    :param data_path:
-        the path to save the dataset
-    :param device:
-        the device to load the model
-    :param options:
-        some additional parameters
-    :return:
-        no return
-    """
-
-    label2id = {}
-    if os.path.exists(data_path) is False:
-        os.makedirs(data_path)
-    train_data_file = os.path.join(data_path, 'boom.pkl')
-    val_data_file = os.path.join(data_path, 'rocket.pkl')
-
-    # generate and save the test dataset if missing
-    if os.path.exists(val_data_file) is False:
-        datapaths = ["../dc/rocket/implementation/"]
-        report_folders = ["../dc/rocket/report/"]
-        th.multiprocessing.set_sharing_strategy('file_system')
-        dataset = Dataset("Rocket",datapaths,report_folders,label2id)
-        g = dataset.batch_graph
-        with open(val_data_file,'wb') as f:
-            pickle.dump(g,f)
-
-    # generate and save the train dataset if missing
-    if os.path.exists(train_data_file) is False:
-        datapaths = ["../dc/boom/implementation/"]
-        report_folders = ["../dc/boom/report/"]
-        th.multiprocessing.set_sharing_strategy('file_system')
-        dataset = Dataset("BoomCore", datapaths, report_folders, label2id)
-        g = dataset.batch_graph
-        with open(train_data_file,'wb') as f:
-            pickle.dump(g,f)
-
-    if len(label2id) != 0:
-        with open(os.path.join(data_path,'label2id.pkl'),'wb') as f:
-            pickle.dump(label2id,f)
-
-    # initialize the  model
-    if options.gat:
-        network = GAT
-    elif options.gin:
-        network = GIN
-    elif options.function:
-        network = FuncGNN
-    else:
-        print('please choose a valid model type!')
-        exit()
-
-    model = network(
-        ntypes = options.in_dim,
-        hidden_dim=options.hidden_dim,
-        out_dim=options.out_dim,
-        dropout=options.gcn_dropout,
-    )
-
-    # initialize a multlayer perceptron
-    mlp = MLP(
-        in_dim = model.out_dim,
-        out_dim = options.nlabels,
-        nlayers = options.n_fcn,
-        dropout = options.mlp_dropout
-    ).to(device)
-    print(model)
-    print(mlp)
-    print("creating model in:",options.model_saving_dir)
-    # save the model and create a file a save the results
-    if os.path.exists(options.model_saving_dir) is False:
-        os.makedirs(options.model_saving_dir)
-        with open(os.path.join(options.model_saving_dir, 'model.pkl'), 'wb') as f:
-            parameters = options
-            pickle.dump((parameters, model,mlp), f)
-        with open(os.path.join(options.model_saving_dir, 'res.txt'), 'w') as f:
-            pass
 
 
 def load_model(device,options):
@@ -255,22 +186,18 @@ def load_model(device,options):
 
 
     with open(os.path.join(model_dir,'model.pkl'), 'rb') as f:
-        param, model,mlp = pickle.load(f)
+        param, classifier = pickle.load(f)
         param.model_saving_dir = options.model_saving_dir
-        model = model.to(device)
+        classifier = classifier.to(device)
 
         # make some changes to the options
         if options.change_lr:
             param.learning_rate = options.learning_rate
         if options.change_alpha:
             param.alpha = options.alpha
-    return param,model,mlp
+    return param,classifier
 
 
-
-def unlabel_low(g,unlabel_threshold):
-    mask_low = g.ndata['position'] <= unlabel_threshold
-    g.ndata['label_o'][mask_low] = 0
 
 def test(options):
 
@@ -281,65 +208,87 @@ def test(options):
     print(data_path)
     test_data_file = os.path.join(data_path,'rocket.pkl')
 
+    print(options)
     # load the model
-    options, model,mlp = load_model(device, options)
+    options, model = load_model(device, options)
     if model is None:
         print("No model, please prepocess first , or choose a pretrain model")
         return
     print(model)
-    mlp = mlp.to(device)
-    print(mlp)
 
     in_nlayers = options.in_nlayers if isinstance(options.in_nlayers,int) else options.in_nlayers[0]
+    out_nlayers = options.out_nlayers if isinstance(options.out_nlayers,int) else options.out_nlayers[0]
 
     label_name = 'label_o'
     print("Loading data...")
+   
     with open(test_data_file,'rb') as f:
         test_g = pickle.load(f)
-    with open(os.path.join(options.datapath,'test'),'rb') as f:
-        test_nids = pickle.load(f)
 
     if in_nlayers == -1:
         in_nlayers = 0
+    if out_nlayers == -1:
+        out_nlayers = 0
+    in_sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
+    out_sampler = Sampler([None] * (out_nlayers + 1), include_dst_in_src=options.include)
 
-    sampler = Sampler([None] * (in_nlayers + 1), include_dst_in_src=options.include)
+    with open(os.path.join('../models/tp6_new1/ln4_bs1024_7/', 'test_nids.pkl'), 'rb') as f:
+        test_nids = pickle.load(f)
+    # create dataloader for training/validate dataset
+    if options.sage:
+        graph_function = DAG2UDG
+        out_sampler.include_dst_in_src = True
+    else:
+        graph_function = get_reverse_graph
 
-    # create dataloader for testing dataset
     testdataloader = MyNodeDataLoader(
         True,
         test_g,
+        graph_function(test_g),
         test_nids,
-        sampler,
+        in_sampler,
+        out_sampler,
         batch_size=test_g.num_nodes(),
         shuffle=True,
         drop_last=False,
     )
+    print(len(test_nids))
+
+    #exit()
 
     beta = options.beta
     # set loss function
     Loss = nn.CrossEntropyLoss()
+    # set the optimizer
+    optim = th.optim.Adam(
+        model.parameters(), options.learning_rate, weight_decay=options.weight_decay
+    )
+    model.train()
+    if model.GCN1 is not None: model.GCN1.train()
+    if model.GCN2 is not None: model.GCN2.train()
 
+    print('testing...')
     total_num, total_loss, correct, fn, fp, tn, tp = 0, 0.0, 0, 0, 0, 0, 0
     runtime = 0
+
     with th.no_grad():
-        for ni, (central_nodes, input_nodes, blocks) in enumerate(testdataloader):
+        for ni, (in_blocks, out_blocks) in enumerate(testdataloader):
             start = time()
-            blocks = [b.to(device) for b in blocks]
-
-            # get the input features
-            if options.gnn:
-                input_features = blocks[0].srcdata["ntype"]
+            in_blocks = [b.to(device) for b in in_blocks]
+            out_blocks = [b.to(device) for b in out_blocks]
+            # print(out_blocks)
+            # get in input features
+            if not options.function:
+                in_input_features = in_blocks[0].srcdata["ntype"]
+                out_input_features = out_blocks[0].srcdata["ntype"]
             else:
-                input_features = blocks[0].srcdata["f_input"]
-
+                in_input_features = in_blocks[0].srcdata["f_input"]
+                out_input_features = out_blocks[0].srcdata["f_input"]
             # the central nodes are the output of the final block
-            output_labels = blocks[-1].dstdata[label_name].squeeze(1)
+            output_labels = in_blocks[-1].dstdata[label_name].squeeze(1)
             total_num += len(output_labels)
-            # get the embeddings of central nodes
-            embedding = model(blocks, input_features)
-
-            # feed the embeddings into the mlp to predict the labels
-            label_hat = mlp(embedding)
+            # predict the labels of central nodes
+            label_hat = model(in_blocks, in_input_features, out_blocks, out_input_features)
             pos_prob = nn.functional.softmax(label_hat, 1)[:, 1]
             # adjust the predicted labels based on a given thredshold beta
             pos_prob[pos_prob >= beta] = 1
@@ -375,10 +324,9 @@ def test(options):
     F1_score = 0
     if precision != 0 or recall != 0:
         F1_score = 2 * recall * precision / (recall + precision)
-    print("  test:")
-    print("\ttp:", tp, " fp:", fp, " fn:", fn, " tn:", tn, " precision:", round(precision, 3))
-    print("\tloss:{:.3f}, acc:{:.3f}, recall:{:.3f}, F1 score:{:.3f}".format(loss, acc,recall, F1_score))
 
+    print("\ttp:", tp, " fp:", fp, " fn:", fn, " tn:", tn, " precision:", round(precision, 3))
+    print("\tloss:{:.3f}, acc:{:.3f}, recall:{:.3f}, F1 score:{:.3f}".format(loss, acc, recall, F1_score))
 
 
 
