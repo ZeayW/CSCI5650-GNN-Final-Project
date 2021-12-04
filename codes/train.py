@@ -463,6 +463,7 @@ def train(options):
         out_sampler.include_dst_in_src = True
     else:
         graph_function = get_reverse_graph
+
     traindataloader = MyNodeDataLoader(
         False,
         train_g,
@@ -529,6 +530,7 @@ def train(options):
             if ni == len(traindataloader)-1:
                 continue
             start_time = time()
+            print(out_blocks)
             # put the block to device
             in_blocks = [b.to(device) for b in in_blocks]
             out_blocks = [b.to(device) for b in out_blocks]
