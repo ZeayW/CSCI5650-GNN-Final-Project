@@ -155,7 +155,7 @@ class ABGNN(nn.Module):
             h = self.conv(act_flag, blocks[i], h)
         return h.squeeze(1)
 
-class GraghSage(nn.Module):
+class GraphSage(nn.Module):
     def __init__(
         self,
         ntypes,
@@ -166,7 +166,7 @@ class GraghSage(nn.Module):
         in_dim=16,
         activation=th.relu,
     ):
-        super(GraghSage, self).__init__()
+        super(GraphSage, self).__init__()
         self.activation = activation
         #print(n_layers)
         self.in_dim = in_dim
