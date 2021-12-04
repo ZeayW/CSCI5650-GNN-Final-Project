@@ -152,6 +152,7 @@ class ABGNN(nn.Module):
             if i != 0:
                 h = self.dropout(h)
             act_flag = (i != depth - 1)
+            print(i,blocks[i])
             h = self.conv(act_flag, blocks[i], h)
         return h.squeeze(1)
 
