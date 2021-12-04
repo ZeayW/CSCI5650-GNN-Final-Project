@@ -335,6 +335,7 @@ def validate(loaders,label_name,device,model,Loss,beta,options):
                 start = time()
                 in_blocks = [b.to(device) for b in in_blocks]
                 out_blocks = [b.to(device) for b in out_blocks]
+                print(out_blocks)
                 # get in input features
                 if not options.function:
                     in_input_features = in_blocks[0].srcdata["ntype"]
@@ -530,7 +531,7 @@ def train(options):
             if ni == len(traindataloader)-1:
                 continue
             start_time = time()
-            print(out_blocks)
+            #print(out_blocks)
             # put the block to device
             in_blocks = [b.to(device) for b in in_blocks]
             out_blocks = [b.to(device) for b in out_blocks]
