@@ -94,7 +94,7 @@ class ABGNN(nn.Module):
         in_dim=16,
         activation=th.relu,
     ):
-        super(GCN, self).__init__()
+        super(ABGNN, self).__init__()
         self.activation = activation
         self.in_dim = in_dim
         self.hidden_dim = hidden_dim
@@ -166,7 +166,7 @@ class GraghSage(nn.Module):
         in_dim=16,
         activation=th.relu,
     ):
-        super(GCN, self).__init__()
+        super(GraghSage, self).__init__()
         self.activation = activation
         #print(n_layers)
         self.in_dim = in_dim
